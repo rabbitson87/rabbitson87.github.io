@@ -8,7 +8,7 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 const config = {
   title: "Rabbitson87의 개발 블로그",
   tagline: "풀스텍 지향 개발자",
-  url: "https://rabbitson87.github.io/",
+  url: "https://rabbitson87.github.io",
   baseUrl: "/",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
@@ -19,6 +19,7 @@ const config = {
   organizationName: "rabbitson87", // Usually your GitHub org/user name.
   projectName: "rabbitson87.github.io", // Usually your repo name.
   trailingSlash: false,
+  githubPort: "22",
 
   // Even if you don't use internalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
@@ -39,11 +40,14 @@ const config = {
         //   // Remove this to remove the "edit this page" links.
         //   editUrl: "https://github.com/rabbitson87/rabbitson87.github.io",
         // },
+        docs: false,
         blog: {
+          routeBasePath: "/",
           showReadingTime: true,
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
-          editUrl: "https://github.com/rabbitson87/rabbitson87.github.io",
+          editUrl:
+            "https://github.com/rabbitson87/rabbitson87.github.io/tree/main/",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
@@ -55,6 +59,9 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      colorMode: {
+        defaultMode: "dark",
+      },
       navbar: {
         title: "Rabbitson87",
         logo: {
@@ -68,7 +75,7 @@ const config = {
           //   position: "left",
           //   label: "Tutorial",
           // },
-          { to: "/blog", label: "Develope Blog", position: "left" },
+          // { to: "/blog", label: "Develope Blog", position: "left" },
           {
             href: "https://github.com/rabbitson87",
             label: "GitHub",

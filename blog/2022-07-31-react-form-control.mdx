@@ -5,7 +5,9 @@ authors: [rabbitson87]
 tags: [react form]
 ---
 
-React로 프로젝트를 만들다보면 회원가입 등 폼을 접하게 돼요.  
+import CodeBlock from "@theme/CodeBlock";
+
+React로 프로젝트를 만들다보면 회원가입 등 폼을 접하게 돼요.
 먼저 라이브러리없이 기본기능으로만 구현된 폼을 통해 간단히 살펴보면서 장단점을 알아봐요.
 
 ## React 기본 폼 다루기
@@ -14,12 +16,23 @@ React로 프로젝트를 만들다보면 회원가입 등 폼을 접하게 돼�
 직접 수정도 가능하며 이름과 비밀번호를 타이핑할때마다 반응하며 보여주게 작성되었어요.  
 마지막으로 로그인 버튼을 누르면 입력된 아이디로 로그인 성공!이라는 문구를 보여줘요.
 
-```jsx live
-function 기본() {
+<details>
+  <summary>기본 폼 예제 보기</summary>
+  <div>
+    <CodeBlock
+      language="jsx"
+      title="/src/components/HelloCodeTitle.js"
+      live
+    >
+      {`function 기본() {
   const [아이디, 아이디입력] = useState(""); // 기본값 ''로 초기화
   const [비밀번호, 비밀번호입력] = useState(""); // 기본값 ''로 초기화
+  
+  const tryLogin = useCallback(() =>
+    alert(아이디.concat('로 로그인 성공!'))
+  );
   return (
-    <form onSubmit={() => alert(`${아이디}로 로그인 성공!`)}>
+    <>
       <div>
         <label>아이디: </label>
         <input
@@ -38,13 +51,17 @@ function 기본() {
           onChange={(event) => 비밀번호입력(event.target.value)}
         />
       </div>
-      <button type="submit">로그인</button>
+      <button type="button" onClick={tryLogin}>
+        로그인
+      </button>
       <p>아이디: {아이디}</p>
       <p>비밀번호: {비밀번호}</p>
-    </form>
+    </>
   );
-}
-```
+}`}
+    </CodeBlock>
+  </div>
+</details>
 
 간단한 폼을 구현해보고 살펴 보았어요. 먼저 기본폼의 장점과 단점을 볼게요.
 
@@ -77,24 +94,28 @@ function 기본() {
 />
 ```
 
-이렇게만 구현한다면 입력값이 변할때에만 값이 이상있는지 체크한 후 alert를 띄워줄 거에요. 단지 값만 체크해줄뿐 2번사항을 개선시키기에는 적절하지가 않네요.  
-그럼 값체크 부분을 로그인 버튼을 누를때 사용하기 위해서 값을 따로 기록해줄 거에요.  
-그래서 유효한 값이면 에러기록을 없애주고 유효하지않은 값이면 에러기록을 기록해주는 로직을 추가해 볼게요.  
-거기에다 에러가 있으면 로그인 버튼을 눌러도 실행되지 않도록 바꿔 볼게요.
+이렇게만 구현한다면 입력값이 변할때에만 값이 이상있는지 체크한 후 alert를 띄워줄 거에요. 단지 값만 체크해줄뿐 바로 로그인 버튼을 누르거나 2번사항을 개선시키기에는 적절하지가 않네요.
+그럼 조금더 개선시켜 볼게요. 값체크 부분을 로그인 버튼을 누를때 사용하기 위해서 값을 따로 기록해줄 거에요, 여기에 화면이 로딩되자마자 비어있는 값으로 체크해 로그인하지 못하도록 막을거에요.
+화면 로딩후 유저가 입력한 값이 유효하면 에러기록을 없애주고 유효하지않으면 에러기록을 기록해주는 로직을 추가해 볼게요.
+이 에러기록을 기반으로 로그인 버튼을 눌러도 에러기록이 있다면 실행되지 않도록 바꿔 볼게요.
 
 ```jsx live
 function 기본() {
   const [아이디, 아이디입력] = useState(""); // 기본값 ''로 초기화
   const [비밀번호, 비밀번호입력] = useState(""); // 기본값 ''로 초기화
 
-  const [에러, 에러기록] = useState({}); // 빈 object값으로 초기화
+  const [에러, 에러기록] = useState({
+    아이디: "아이디가 비어있어요!",
+    비밀번호: "비밀번호가 비어있어요!",
+  }); // 기본값 에러 초기화
+
+  const tryLogin = useCallback(() => {
+    if (Object.keys(에러).length === 0) {
+      alert(`${아이디}로 로그인 성공!`);
+    }
+  });
   return (
-    <form
-      onSubmit={() => {
-        if (Object.keys(에러).length === 0) alert(`${아이디}로 로그인 성공!`);
-        return;
-      }}
-    >
+    <>
       <div>
         <label>아이디: </label>
         <input
@@ -116,7 +137,9 @@ function 기본() {
             아이디입력(event.target.value);
           }}
         />
-        {에러["아이디"] && <p style={{ color: "red" }}>{에러["아이디"]}</p>}
+        {에러["아이디"] && (
+          <p style={{ color: "red" }}>{에러["아이디"]}</p>
+        )}
       </div>
       <div>
         <label>비밀번호: </label>
@@ -128,7 +151,10 @@ function 기본() {
             const { value } = event.target;
             if (!value || value === "")
               // 값이 있는지 체크
-              에러기록({ ...에러, 비밀번호: "비밀번호가 비어있어요!" });
+              에러기록({
+                ...에러,
+                비밀번호: "비밀번호가 비어있어요!",
+              });
             else {
               에러기록((현재에러) => {
                 const 현재에러복사본 = { ...현재에러 };
@@ -139,12 +165,16 @@ function 기본() {
             비밀번호입력(event.target.value);
           }}
         />
-        {에러["비밀번호"] && <p style={{ color: "red" }}>{에러["비밀번호"]}</p>}
+        {에러["비밀번호"] && (
+          <p style={{ color: "red" }}>{에러["비밀번호"]}</p>
+        )}
       </div>
-      <button type="submit">로그인</button>
+      <button type="button" onClick={tryLogin}>
+        로그인
+      </button>
       <p>아이디: {아이디}</p>
       <p>비밀번호: {비밀번호}</p>
-    </form>
+    </>
   );
 }
 ```
