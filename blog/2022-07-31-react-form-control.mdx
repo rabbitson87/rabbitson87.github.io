@@ -1,82 +1,77 @@
 ---
 slug: react-form-control
-title: 효율적인 React form 컨트롤
+title: 효율적인 React 폼 컨트롤
 authors: [rabbitson87]
 tags: [react form]
 ---
 
 import CodeBlock from "@theme/CodeBlock";
+import Highlight from "@site/src/components/Highlight";
 
-React로 프로젝트를 만들다보면 회원가입 등 폼을 접하게 돼요.
-먼저 라이브러리없이 기본기능으로만 구현된 폼을 통해 간단히 살펴보면서 장단점을 알아봐요.
+React로 프로젝트를 만들다보면 회원가입 등 폼을 만들 필요가 있게 돼요.
+간단한 폼 구현부터 단계별로 기능과 단점을 보완해가면서 효율적인 폼을 만들어봐요.
+먼저 기본 React 기능으로만 구현된 폼을 통해 간단히 살펴보면서 장단점을 알아봐요.
 
-## React 기본 폼 다루기
+## 1단계 React 기본 폼 다루기
 
-다음은 html의 form,label,input을 활용한 예제에요.
-직접 수정도 가능하며 이름과 비밀번호를 타이핑할때마다 반응하며 보여주게 작성되었어요.  
+다음은 html의 label,input을 활용한 예제에요.
+직접 수정도 가능하며 이름과 비밀번호의 값에 반응하며 보여주게 작성되었어요.
 마지막으로 로그인 버튼을 누르면 입력된 아이디로 로그인 성공!이라는 문구를 보여줘요.
 
 <details>
   <summary>기본 폼 예제 보기</summary>
   <div>
-    <CodeBlock
-      language="jsx"
-      title="/src/components/HelloCodeTitle.js"
-      live
-    >
+    <CodeBlock language="jsx" live>
       {`function 기본() {
-  const [아이디, 아이디입력] = useState(""); // 기본값 ''로 초기화
-  const [비밀번호, 비밀번호입력] = useState(""); // 기본값 ''로 초기화
-  
-  const tryLogin = useCallback(() =>
-    alert(아이디.concat('로 로그인 성공!'))
-  );
-  return (
-    <>
+    const [아이디, 아이디입력] = useState(""); // 기본값 ''로 초기화
+    const [비밀번호, 비밀번호입력] = useState(""); // 기본값 ''로 초기화
+    
+    const 로그인시도 = useCallback(() =>
+      alert(\`\${아이디}로 로그인 성공!\`)
+    ,[아이디]);
+    return (
+      <>
       <div>
-        <label>아이디: </label>
-        <input
-          type="text"
-          value={아이디}
-          placeholder="아이디를 입력해주세요."
-          onChange={(event) => 아이디입력(event.target.value)}
-        />
-        <label>비밀번호: </label>
-      </div>
-      <div>
-        <input
-          type="password"
-          value={비밀번호}
-          placeholder="비밀번호를 입력해주세요."
-          onChange={(event) => 비밀번호입력(event.target.value)}
-        />
-      </div>
-      <button type="button" onClick={tryLogin}>
-        로그인
-      </button>
-      <p>아이디: {아이디}</p>
-      <p>비밀번호: {비밀번호}</p>
-    </>
-  );
-}`}
+          <label>아이디: 
+          <input
+            type="text"
+            value={아이디}
+            placeholder="아이디를 입력해주세요."
+            onChange={(event) => 아이디입력(event.target.value)}
+          />
+          </label>
+          </div>
+          <div>
+          <label>비밀번호:
+          <input
+            type="password"
+            value={비밀번호}
+            placeholder="비밀번호를 입력해주세요."
+            onChange={(event) => 비밀번호입력(event.target.value)}
+          />
+           </label>
+           </div>
+        <button type="button" onClick={로그인시도}>
+          로그인
+        </button>
+        <p>아이디: {아이디}</p>
+        <p>비밀번호: {비밀번호}</p>
+      </>
+    );
+  }`}
     </CodeBlock>
   </div>
 </details>
 
-간단한 폼을 구현해보고 살펴 보았어요. 먼저 기본폼의 장점과 단점을 볼게요.
-
-### 장점
-
-1. 라이브러리없이 구현되어 가벼워요.
-2. 코드를 알아보기가 쉬워요.
+간단한 폼을 구현해보고 살펴 보았어요. 먼저 React 기본 폼의 단점을 볼게요.
 
 ### 단점
 
 1. 입력값을 검사 할 수가 없어요.
 2. 로그인 버튼을 누르면 무조건 실행돼요.
 
-기본폼이지만 단점을 하나하나 해결해보면서 쓸만한 폼을 같이 완성시켜봐요!
-먼저 1번사항부터 개선시켜봐요 입력값을 검사하기 위해선 입력 input의 onChange 이벤트가 발생할때마다 체크해야돼요.
+앞서 말한것 처럼 단점을 하나하나 해결해보면서 쓸만한 폼을 같이 완성시켜봐요!
+먼저 1번사항부터 개선시켜봐요 입력값을 검사하기 위해선 입력 input의 <Highlight color="#25c2a0">onChange 이벤트</Highlight>가 발생할때마다 체크해야돼요.
 
 ```jsx showLineNumbers
 <input
@@ -94,87 +89,264 @@ React로 프로젝트를 만들다보면 회원가입 등 폼을 접하게 돼�
 />
 ```
 
-이렇게만 구현한다면 입력값이 변할때에만 값이 이상있는지 체크한 후 alert를 띄워줄 거에요. 단지 값만 체크해줄뿐 바로 로그인 버튼을 누르거나 2번사항을 개선시키기에는 적절하지가 않네요.
-그럼 조금더 개선시켜 볼게요. 값체크 부분을 로그인 버튼을 누를때 사용하기 위해서 값을 따로 기록해줄 거에요, 여기에 화면이 로딩되자마자 비어있는 값으로 체크해 로그인하지 못하도록 막을거에요.
-화면 로딩후 유저가 입력한 값이 유효하면 에러기록을 없애주고 유효하지않으면 에러기록을 기록해주는 로직을 추가해 볼게요.
-이 에러기록을 기반으로 로그인 버튼을 눌러도 에러기록이 있다면 실행되지 않도록 바꿔 볼게요.
+이런식으로 말이죠. 하지만 이렇게만 구현한다면 입력값이 변할때에만 값이 이상있는지 체크한 후 alert를 띄워줄 거에요. 단지 값만 체크해줄뿐 바로 로그인 버튼을 누르거나 <Highlight color="#25c2a0">2번사항을 개선</Highlight>시키기에는 적절하지가 않아요.
+그럼 조금더 개선시켜 볼게요. 값체크 부분을 로그인 버튼을 누를때 사용하기 위해서 <Highlight color="#25c2a0">값을 따로 기록</Highlight>해줄 거에요, 여기에 화면이 로딩되자마자 비어있는 값으로 체크해 로그인하지 못하도록 막을거에요.
+화면 로딩후 유저가 입력한 값이 유효하면 에러기록을 없애주고 유효하지않으면 <Highlight color="#25c2a0">에러기록을 해주는 로직</Highlight>을 추가해 볼게요.
+이 에러기록을 기반으로 로그인 버튼을 눌러도 에러기록이 있다면 실행되지 않도록 바꾸고 에러 메시지도 출력 해볼게요.
 
-```jsx live
-function 기본() {
-  const [아이디, 아이디입력] = useState(""); // 기본값 ''로 초기화
-  const [비밀번호, 비밀번호입력] = useState(""); // 기본값 ''로 초기화
+## 2단계 React 기본 폼 다루기
 
-  const [에러, 에러기록] = useState({
-    아이디: "아이디가 비어있어요!",
-    비밀번호: "비밀번호가 비어있어요!",
-  }); // 기본값 에러 초기화
+<details>
+  <summary>2단계 기본 폼 예제 보기</summary>
+  <div>
+    <CodeBlock language="jsx" live>
+      {`function 기본() {
+    const [아이디, 아이디입력] = useState(""); // 기본값 ''로 초기화
+    const [비밀번호, 비밀번호입력] = useState(""); // 기본값 ''로 초기화
+    
+    const [에러, 에러기록] = useState({
+      아이디: "아이디가 비어있어요!",
+      비밀번호: "비밀번호가 비어있어요!",
+    });
+    
+    const 로그인시도 = useCallback(() => {
+      if (Object.keys(에러).length === 0) {
+        alert(\`\${아이디}로 로그인 성공!\`);
+      }
+    }, [에러, 아이디]);
+    return (
+      <>
+        <div>
+          <label>아이디:
+          <input
+            type="text"
+            value={아이디}
+            placeholder="아이디를 입력해주세요."
+            onChange={(event) => {
+              const { value } = event.target;
+              if (!value || value === "")
+                // 값이 있는지 체크
+                에러기록({ ...에러, 아이디: "아이디가 비어있어요!" });
+              else {
+                에러기록((현재에러) => {
+                  const 현재에러복사본 = { ...현재에러 };
+                  delete 현재에러복사본.아이디;
+                  return 현재에러복사본;
+                });
+              }
+              아이디입력(event.target.value);
+            }}
+          />
+           </label>
+          {에러["아이디"] && (
+            <p style={{ color: "red" }}>{에러["아이디"]}</p>
+          )}
+        </div>
+        <div>
+          <label>비밀번호:
+          <input
+            type="password"
+            value={비밀번호}
+            placeholder="비밀번호를 입력해주세요."
+            onChange={(event) => {
+              const { value } = event.target;
+              if (!value || value === "")
+                // 값이 있는지 체크
+                에러기록({
+                  ...에러,
+                  비밀번호: "비밀번호가 비어있어요!",
+                });
+              else {
+                에러기록((현재에러) => {
+                  const 현재에러복사본 = { ...현재에러 };
+                  delete 현재에러복사본.비밀번호;
+                  return 현재에러복사본;
+                });
+              }
+              비밀번호입력(event.target.value);
+            }}
+          />
+           </label>
+          {에러["비밀번호"] && (
+            <p style={{ color: "red" }}>{에러["비밀번호"]}</p>
+          )}
+        </div>
+        <button type="button" onClick={로그인시도}>
+          로그인
+        </button>
+        <p>아이디: {아이디}</p>
+        <p>비밀번호: {비밀번호}</p>
+      </>
+    );
+    }`}
 
-  const tryLogin = useCallback(() => {
-    if (Object.keys(에러).length === 0) {
-      alert(`${아이디}로 로그인 성공!`);
-    }
-  });
-  return (
-    <>
-      <div>
-        <label>아이디: </label>
-        <input
-          type="text"
-          value={아이디}
-          placeholder="아이디를 입력해주세요."
-          onChange={(event) => {
-            const { value } = event.target;
-            if (!value || value === "")
-              // 값이 있는지 체크
-              에러기록({ ...에러, 아이디: "아이디가 비어있어요!" });
-            else {
-              에러기록((현재에러) => {
-                const 현재에러복사본 = { ...현재에러 };
-                delete 현재에러복사본.아이디;
-                return 현재에러복사본;
-              });
-            }
-            아이디입력(event.target.value);
-          }}
-        />
-        {에러["아이디"] && (
-          <p style={{ color: "red" }}>{에러["아이디"]}</p>
-        )}
-      </div>
-      <div>
-        <label>비밀번호: </label>
-        <input
-          type="password"
-          value={비밀번호}
-          placeholder="비밀번호를 입력해주세요."
-          onChange={(event) => {
-            const { value } = event.target;
-            if (!value || value === "")
-              // 값이 있는지 체크
-              에러기록({
-                ...에러,
-                비밀번호: "비밀번호가 비어있어요!",
-              });
-            else {
-              에러기록((현재에러) => {
-                const 현재에러복사본 = { ...현재에러 };
-                delete 현재에러복사본.비밀번호;
-                return 현재에러복사본;
-              });
-            }
-            비밀번호입력(event.target.value);
-          }}
-        />
-        {에러["비밀번호"] && (
-          <p style={{ color: "red" }}>{에러["비밀번호"]}</p>
-        )}
-      </div>
-      <button type="button" onClick={tryLogin}>
-        로그인
-      </button>
-      <p>아이디: {아이디}</p>
-      <p>비밀번호: {비밀번호}</p>
-    </>
-  );
-}
-```
+</CodeBlock>
+
+  </div>
+</details>
+
+좀더 우리가 원하는 폼 형태에 가까워졌어요! 하지만 새로운 개선사항이 눈에 띄네요.
+
+### 단점
+
+1. 폼에 입력하지않아도 에러 메시지가 먼저 보여요.
+2. 폼 하나를 만들기 위한 코드량이 많아졌어요.
+
+먼저 1번은 어떻게 해결하는게 좋을지 먼저 생각해봐요. 우선 우리가 로그인할때의 기억을 떠올려 봐요.
+아이디를 넣기도전에 에러 메시지가 뜨는 방식이 아니라 입력하고 나오면 에러 메시지를 보여줘요.
+어떻게 이게 가능할까요? html 기본 요소인 [input](https://developer.mozilla.org/ko/docs/Web/HTML/Element/Input)에 사용 가능한 속성중에 [onblur](https://developer.mozilla.org/en-US/docs/Web/API/Element/blur_event)가 있어요.
+mdn문서에 따르면 해당 요소의 포커스가 사라졌을때 발생하는 이벤트라고 되어있어요. 아까 떠올려 보았던 로그인 경험과 비슷하네요?
+React에서도 비슷하게 활용이 가능한데요! 이름이 조금 다르지만 사용법은 동일해요. 요소 속성에 [onBlur](https://ko.reactjs.org/docs/events.html#onblur)를 사용하여 이벤트를 수신하면 돼요.
+그럼 onBlur의 이벤트가 수신되면 그때부터 에러 메시지를 보여주면 되겠네요. 이제 1번은 해결될거 같아요!  
+2번으로 넘어가서 앞전 코드를 살펴보면 반복적인 부분들이 많이 보여요.
+
+<details>
+  <summary>반복되는 부분 살펴보기</summary>
+  <div>
+    <CodeBlock language="jsx" showLineNumbers>
+      {`
+    ///////////////////////////////////////////////////////////////////
+    const [아이디, 아이디입력] = useState(""); // 기본값 ''로 초기화
+    const [비밀번호, 비밀번호입력] = useState(""); // 기본값 ''로 초기화
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+    onChange={(event) => {
+      const { value } = event.target;
+      if (!value || value === "")
+        // 값이 있는지 체크
+        에러기록({ ...에러, 아이디: "아이디가 비어있어요!" });
+      else {
+        에러기록((현재에러) => {
+          const 현재에러복사본 = { ...현재에러 };
+          delete 현재에러복사본.아이디;
+          return 현재에러복사본;
+        });
+      }
+      아이디입력(event.target.value);
+    }}
+    onChange={(event) => {
+      const { value } = event.target;
+      if (!value || value === "")
+        // 값이 있는지 체크
+        에러기록({
+          ...에러,
+          비밀번호: "비밀번호가 비어있어요!",
+        });
+      else {
+        에러기록((현재에러) => {
+          const 현재에러복사본 = { ...현재에러 };
+          delete 현재에러복사본.비밀번호;
+          return 현재에러복사본;
+        });
+      }
+      비밀번호입력(event.target.value);
+    }}
+    ///////////////////////////////////////////////////////////////////`}
+    </CodeBlock>
+
+  </div>
+</details>
+
+예를들면 이런 부분들이에요. 3~4번째 줄은 관리하는 키값만 다를뿐 같은 input의 데이터를 관리하네요.
+7~37번째 줄은 같은 에러 상태를 가지고 현재 관리하는 키값요소만 제거/추가만 하고있네요.
+이런부분들 리팩토링을 같이 진행해 볼게요.
+input 각각의 id를 input의 키값으로 추가해서 어느 input 값인지 확인할거에요. 그러면 하나의 함수로 입력값 관리 + 에러 관리가 가능하게돼요.
+아래의 예제를 보면서 진행 해볼게요.
+
+## 3단계 React 기본 폼 다루기
+
+<details>
+  <summary>3단계 기본 폼 예제 보기</summary>
+  <div>
+    <CodeBlock language="jsx" live>
+      {`function 기본() {
+        
+    // const [아이디, 아이디입력] = useState(""); 
+    // const [비밀번호, 비밀번호입력] = useState("");
+    // 아래로 대체
+    const [input상태, input상태변경] = useState({
+      아이디: '', // 기본값 ''로 초기화
+      비밀번호: '', // 기본값 ''로 초기화
+    });
+    const [에러, 에러기록] = useState({
+      아이디: "아이디가 비어있어요!",
+      비밀번호: "비밀번호가 비어있어요!",
+    });
+    const input값기록및에러관리 = useCallback((event) => {
+      const { value, id } = event.target;
+      if (!value || value === "")
+        // 값이 있는지 체크
+        에러기록({
+          ...에러,
+          비밀번호: "비밀번호가 비어있어요!",
+        });
+      else {
+        에러기록((현재에러) => {
+          const 현재에러복사본 = { ...현재에러 };
+          delete 현재에러복사본.비밀번호;
+          return 현재에러복사본;
+        });
+      }
+      비밀번호입력(event.target.value);
+    },[]);
+    const 로그인시도 = useCallback(() => {
+      if (Object.keys(에러).length === 0) {
+        alert(\`\${아이디}로 로그인 성공!\`);
+      }
+    }, [에러, 아이디]);
+    return (
+      <>
+        <div>
+          <label>아이디:
+          <input
+            id="아이디"
+            type="text"
+            value={아이디}
+            placeholder="아이디를 입력해주세요."
+            onChange={(event) => {
+              const { value } = event.target;
+              if (!value || value === "")
+                // 값이 있는지 체크
+                에러기록({ ...에러, 아이디: "아이디가 비어있어요!" });
+              else {
+                에러기록((현재에러) => {
+                  const 현재에러복사본 = { ...현재에러 };
+                  delete 현재에러복사본.아이디;
+                  return 현재에러복사본;
+                });
+              }
+              아이디입력(event.target.value);
+            }}
+          />
+           </label>
+          {에러["아이디"] && (
+            <p style={{ color: "red" }}>{에러["아이디"]}</p>
+          )}
+        </div>
+        <div>
+          <label>비밀번호:
+          <input
+            id="비밀번호"
+            type="password"
+            value={비밀번호}
+            placeholder="비밀번호를 입력해주세요."
+            onChange={(event) => }
+          />
+           </label>
+          {에러["비밀번호"] && (
+            <p style={{ color: "red" }}>{에러["비밀번호"]}</p>
+          )}
+        </div>
+        <button type="button" onClick={로그인시도}>
+          로그인
+        </button>
+        <p>아이디: {아이디}</p>
+        <p>비밀번호: {비밀번호}</p>
+      </>
+    );
+    }`}
+
+</CodeBlock>
+
+  </div>
+</details>
