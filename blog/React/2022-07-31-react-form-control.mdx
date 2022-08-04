@@ -8,9 +8,9 @@ tags: [react form]
 import CodeBlock from "@theme/CodeBlock";
 import Highlight from "@site/src/components/Highlight";
 
-React로 프로젝트를 만들다보면 회원가입 등 폼을 만들 필요가 있게 돼요.
-간단한 폼 구현부터 단계별로 기능과 단점을 보완해가면서 효율적인 폼을 만들어봐요.
-먼저 기본 React 기능으로만 구현된 폼을 통해 간단히 살펴보면서 장단점을 알아봐요.
+React로 프로젝트를 만들다보면 회원가입 등 폼을 만들 필요가 있어요.
+간단한 폼 구현부터 단계별로 기능과 단점을 보완해가면서 최종적으로 효율적인 폼을 만들어봐요.
+먼저 기본 React 함수인 useState으로만 구현된 폼을 통해 간단히 살펴봐요.
 
 ## 1단계 React 기본 폼 다루기
 
@@ -352,7 +352,8 @@ onBlur를 적용해서 에러메시지가 바로 보이지않고 input요소를 
 (크롬인경우 클릭해서 확장 프로그램 설치)를 설치하여 기본 설정중에 <Highlight color="#25c2a0">Highlight updates when components render.</Highlight>를 체크해 주시면 확인가능해요.
 화면 구조가 간단한 경우에는 문제가 되지않지만 많은 폼을 사용하면 화면 전체를 계속 갱신하면서 그리기 때문에 성능 저하가 일어나요!
 브라우저에서 화면을 그리는 행위가 성능이 많이 필요하기 때문에 가상돔을 사용하여 [필요한 부분만 갱신](https://ko.reactjs.org/docs/rendering-elements.html#react-only-updates-whats-necessary)해주는 React가 등장한 거에요.  
-그럼 이문제를 개선해볼까요? 해결은 화면 갱신 자체를 하지않으면서 폼을 관리하는 방법으로 해볼게요.
+그럼 이문제를 개선해볼까요? 입력값이 들어와도 화면 갱신 자체를 하지않으면서 폼을 관리하는 방법으로 해볼게요.
+다만 에러메시지는 화면을 갱신해야 보이기 때문에 따로 컴포넌트화해서 만들어줄게요.
 
 ## 4단계 React 심화 폼 다루기
 
@@ -360,70 +361,136 @@ onBlur를 적용해서 에러메시지가 바로 보이지않고 input요소를 
   <summary>4단계 심화 폼 예제 보기</summary>
   <div>
     <CodeBlock language="jsx" live noInline>
-      {`// 입력폼 컴포넌트화
-function Input폼({ 이름, 라벨, input상태, 미입력시보여줄문자, input값기록및에러관리, 에러 }) {
-  const [onBlur상태, onBlur상태변경] = useState(false);
-  useEffect(() => {
-    input값기록및에러관리({target:{id:이름, value: ""}});
-    return {};
-  },[]);
-  const 입력값 = useMemo(() => {
-    let 반환값 = "";
-    console.log(input상태);
-    if (input상태 && input상태[이름]) 반환값 = input상태[이름];
-    return 반환값;
-  },[input상태]);
-  return (<div>
-    <label>{라벨}:
-    <input
-      id={이름}
-      type="text"
-      defaultValue={입력값}
-      placeholder={미입력시보여줄문자}
-      onChange={input값기록및에러관리}
-      onBlur={() => onBlur상태변경(true)}
-    />
-      </label>
-      {console.log("ㄴㅇㄻㄴㅇ", 에러)}
-    {에러 && 에러[이름] && onBlur상태 && (
-      <p style={{ color: "red" }}>{에러[이름]}</p>
-    )}
-  </div>);
-};
-function 상태관리함수(에러없을때실행할함수) {
+      {`// 상태관리함수 정의
+function 상태관리함수() {
+  const input폼Ref = useRef({});
   const input상태 = useRef({});
+  const inputBlur여부 = useRef({});
+  const input값검사함수 = useRef({});
   const 에러 = useRef({});
   const input값기록및에러관리 = useCallback((이벤트) => {
     const { value, id } = 이벤트.target;
-    if (!value || value === "") {
-      // 값이 있는지 체크 
-      에러.current = { ...에러.current, [id]: \`\${id}가 비어있어요!\` };
+    const 검사결과 = input값검사함수.current[id](value);
+    if (검사결과) {
+      에러.current = { ...에러.current, [id]: 검사결과 };
     } else {
       const 에러복사본 = { ...에러.current };
       delete 에러복사본[id];
       에러.current = 에러복사본;
     }
     input상태.current = {...input상태.current, [id]: value };
-    console.log(input상태.current, 에러.current);
-  },[input상태, 에러]);
-  const 실행하기 = useCallback(() => {
+    console.log(input상태.current);
+  },[input상태.current, input값검사함수.current, 에러.current]);
+  const 실행하기 = useCallback((에러없을때실행할함수) => {
     if (Object.keys(에러.current).length === 0) {
       에러없을때실행할함수(input상태.current)
     }
   }, [에러, input상태]);
-  return { input상태: input상태.current, input값기록및에러관리, 에러: 에러.current, 실행하기 };
+  const input폼Ref등록 = useCallback((input폼, 이름) => {
+    if (input폼) {
+      input폼Ref.current = {...input폼Ref.current, [이름]:input폼 };
+    }
+    return input폼Ref.current[이름];
+  }, [input폼Ref]);
+  const onBlur이벤트 = useCallback((이벤트) => {
+    const { id } = 이벤트.target;
+    inputBlur여부.current = {...inputBlur여부.current, [id]: true };
+  },[input상태]);
+  const 값검사함수등록 = useCallback((이름, 값검사함수) => {
+    input값검사함수.current = {...input값검사함수.current, [이름]: 값검사함수 };
+  },[input상태]);
+  const input상태값 = useCallback((이름) => {
+    return {
+      value: input상태.current[이름],
+      error: 에러.current[이름],
+      blur: inputBlur여부.current[이름],
+      ref: input폼Ref[이름],
+    }
+  }, [input상태.current]);
+  const 등록된폼 = useCallback((이름) => input폼Ref.current[이름],[input폼Ref.current]);
+  const input폼등록 = useCallback(({ 이름, 값검사함수 }) => {
+    if (이름 && 값검사함수) {
+      값검사함수등록(이름, 값검사함수);
+      if (!input상태.current[이름]) {
+        input값기록및에러관리({ target: { id:이름, value: "" }});
+      }
+    }
+    return {
+      id: 이름,
+      ref: (input폼) => input폼Ref등록(input폼, 이름),
+      onChange: input값기록및에러관리,
+      onBlur: onBlur이벤트,
+    };
+  }, [input폼Ref등록, input값기록및에러관리, input상태.current, 값검사함수등록, onBlur이벤트]);
+  return { input폼등록, input상태값, 실행하기 };
+};
+// 상태관리함수전파
+const Context = createContext(null);
+const Form제공자 = (인자들) => {
+  const { children, ...전달받은인자들 } = 인자들;
+  return (
+    <Context.Provider value={전달받은인자들}>
+      {children}
+    </Context.Provider>
+  );
+};
+// 에러 표시 컴포넌트화
+function Error메시지({ 이름 }) {
+  const { input상태값 } = useContext(Context);
+  const { value, error, blur } = input상태값(이름);
+  console.log('input상태값',value);
+  const [input값, input값변경] = useState(value);
+  useEffect(() => {
+    input값변경(value);
+  },[value]);
+  console.log('value', value);
+  
+  return (
+    <>
+      {error && blur && (
+        <p style={{ color: "red" }}>{error}</p>
+      )}
+    </>
+  )
+};
+// 입력폼 컴포넌트화
+function Input폼({ 이름, 라벨, 미입력시보여줄문자, 값검사함수 }) {
+  const { input폼등록 } = useContext(Context);
+  const input연결함수들 = input폼등록({ 이름, 값검사함수 });
+  return (
+    <div>
+      <label>{라벨}:
+      <input
+        {...input연결함수들}
+        type="text"
+        placeholder={미입력시보여줄문자}
+      />
+      </label>
+      <Error메시지 이름={이름} />
+    </div>
+  );
 };
 function 기본() {
-  const { input상태, input값기록및에러관리, 에러, 실행하기 } = 상태관리함수((input상태) => alert(\`\${input상태["심화-1아이디"]}로 로그인 성공!\`))
+  const { 실행하기, ...함수들  } = 상태관리함수()
+  const 이름검사함수 = useCallback((값) => {
+    if (!값 || 값 === "") return "아이디가 비어있어요!";
+    return undefined;
+  },[]);
+  const 비밀번호검사함수 = useCallback((값) => {
+    if (!값 || 값 === "") return "비밀번호가 비어있어요!";
+    return undefined;
+  },[]);
 return (
   <>
-  <Input폼
-    이름="심화-1아이디" 라벨="아이디" input상태={input상태} 미입력시보여줄문자="아이디를 입력해주세요." input값기록및에러관리={input값기록및에러관리} 에러={에러} />
-    <button type="button" onClick={실행하기}>
-      로그인
-    </button>
-    <p>아이디: {input상태 && input상태["아이디"]}</p>
-    <p>비밀번호: {input상태 && input상태["비밀번호"]}</p>
+    <Form제공자 {...함수들}>
+      <Input폼 이름="심화-1아이디" 라벨="아이디"
+        미입력시보여줄문자="아이디를 입력해주세요." 값검사함수={이름검사함수} />
+      <Input폼 이름="심화-1비밀번호" 라벨="비밀번호"
+        미입력시보여줄문자="비밀번호를 입력해주세요." 값검사함수={비밀번호검사함수} />
+      <button type="button" onClick={() => 실행하기((input상태) => alert(\`\${input상태["심화-1아이디"]}로 로그인 성공!\`))}>
+        로그인
+      </button>
+    </Form제공자>
   </>
 );
 }
