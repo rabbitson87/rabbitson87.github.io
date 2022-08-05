@@ -368,6 +368,21 @@ function 상태관리함수() {
   const inputBlur여부 = useRef({});
   const input값검사함수 = useRef({});
   const 에러 = useRef({});
+  const 이벤트전파 = {
+    이벤트들: {},
+    이벤트발생: (이름, 데이터) => {
+      if (!this.이벤트들[이름]) return;
+      this.이벤트들[이름].forEach(callback => callback(데이터))
+    },
+    구독: (이름, callback) => {
+      if (!this.이벤트들[이름]) this.이벤트들[이름] = [];
+      this.이벤트들[이름].push(callback);
+    },
+    구독해지: (이름) => {
+      if (!this.이벤트들[이름]) return;
+      delete this.이벤트들[이름];
+    }
+  };
   const input값기록및에러관리 = useCallback((이벤트) => {
     const { value, id } = 이벤트.target;
     const 검사결과 = input값검사함수.current[id](value);
@@ -379,6 +394,7 @@ function 상태관리함수() {
       에러.current = 에러복사본;
     }
     input상태.current = {...input상태.current, [id]: value };
+    이벤트전파.이벤트발생(id, value);
     console.log(input상태.current);
   },[input상태.current, input값검사함수.current, 에러.current]);
   const 실행하기 = useCallback((에러없을때실행할함수) => {
@@ -395,6 +411,7 @@ function 상태관리함수() {
   const onBlur이벤트 = useCallback((이벤트) => {
     const { id } = 이벤트.target;
     inputBlur여부.current = {...inputBlur여부.current, [id]: true };
+    이벤트전파.이벤트발생(\`\${id}_blur\`, true);
   },[input상태]);
   const 값검사함수등록 = useCallback((이름, 값검사함수) => {
     input값검사함수.current = {...input값검사함수.current, [이름]: 값검사함수 };
@@ -404,7 +421,7 @@ function 상태관리함수() {
       value: input상태.current[이름],
       error: 에러.current[이름],
       blur: inputBlur여부.current[이름],
-      ref: input폼Ref[이름],
+      ref: input폼Ref.current[이름],
     }
   }, [input상태.current]);
   const 등록된폼 = useCallback((이름) => input폼Ref.current[이름],[input폼Ref.current]);
@@ -422,7 +439,7 @@ function 상태관리함수() {
       onBlur: onBlur이벤트,
     };
   }, [input폼Ref등록, input값기록및에러관리, input상태.current, 값검사함수등록, onBlur이벤트]);
-  return { input폼등록, input상태값, 실행하기 };
+  return { input폼등록, 이벤트전파, input상태값, 실행하기 };
 };
 // 상태관리함수전파
 const Context = createContext(null);
@@ -436,19 +453,23 @@ const Form제공자 = (인자들) => {
 };
 // 에러 표시 컴포넌트화
 function Error메시지({ 이름 }) {
-  const { input상태값 } = useContext(Context);
-  const { value, error, blur } = input상태값(이름);
-  console.log('input상태값',value);
-  const [input값, input값변경] = useState(value);
+  const { 이벤트전파 } = useContext(Context);
+  const [에러, 에러변경] = useState(undefined);
+  const [blur, blur변경] = useState(undefined);
   useEffect(() => {
-    input값변경(value);
-  },[value]);
-  console.log('value', value);
+    이벤트전파.구독(이름, (이벤트값) => 에러변경(이벤트값));
+    이벤트전파.구독(\`\${이름}_blur\`, (이벤트값) => 에러변경(이벤트값));
+    return () => {
+      이벤트전파.구독해지(이름);
+      이벤트전파.구독해지(\`\${이름}_blur\`);
+    }
+  },[]);
+  console.log('에러', 에러);
   
   return (
     <>
-      {error && blur && (
-        <p style={{ color: "red" }}>{error}</p>
+      {에러 && blur && (
+        <p style={{ color: "red" }}>{에러}</p>
       )}
     </>
   )
